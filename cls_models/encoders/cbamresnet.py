@@ -97,9 +97,9 @@ class CBAMResNetEncoder(ResNet):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.pretrained = False
-#         self.bam1 = BAM(64* (kwargs["block"].expansion))
-#         self.bam2 = BAM(128* (kwargs["block"].expansion))
-#         self.bam3 = BAM(256* (kwargs["block"].expansion))
+        self.bam1 = BAM(64* (kwargs["block"].expansion))
+        self.bam2 = BAM(128* (kwargs["block"].expansion))
+        self.bam3 = BAM(256* (kwargs["block"].expansion))
         del self.fc
 
     def forward(self, x):
@@ -109,12 +109,12 @@ class CBAMResNetEncoder(ResNet):
 
         x1 = self.maxpool(x0)
         x1 = self.layer1(x1)
-#         x1 = self.bam1(x1)
+        x1 = self.bam1(x1)
 
         x2 = self.layer2(x1)
-#         x2 = self.bam2(x2)
+        x2 = self.bam2(x2)
         x3 = self.layer3(x2)
-#         x3 = self.bam3(x3)
+        x3 = self.bam3(x3)
         x4 = self.layer4(x3)
 
         return [x4, x3, x2, x1, x0]

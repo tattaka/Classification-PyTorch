@@ -7,6 +7,23 @@ class Swish(nn.Module):
     def forward(self, x):
         return x * torch.sigmoid(x)
     
+class MishFunction(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, x):
+        ctx.save_for_backward(x)
+        return x * torch.tanh(F.softplus(x))   # x * tanh(ln(1 + exp(x)))
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        x = ctx.saved_variables[0]
+        sigmoid = torch.sigmoid(x)
+        tanh_sp = torch.tanh(F.softplus(x)) 
+        return grad_output * (tanh_sp + x * sigmoid * (1 - tanh_sp * tanh_sp))
+
+class Mish(nn.Module):
+    def forward(self, x):
+        return MishFunction.apply(x)
+    
 class Flatten(nn.Module):
     """
     Simple class for flattening layer.

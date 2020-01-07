@@ -10,7 +10,7 @@ def get_model(model_type: str = 'SimpleNet', # or "ACPNet" or "JPUNet"
               encoder: str = 'resnet18',
               encoder_weights: str = 'imagenet',
               metric_branch:bool = False,
-              middle_activation: str = "ReLU", # or "Swish"
+              middle_activation: str = "ReLU", # or "Swish" or "Mish"
               last_activation:str = "Softmax", # or "Sigmoid" or None
               num_classes: int = 10, 
               tta:bool = False,
@@ -47,6 +47,8 @@ def get_model(model_type: str = 'SimpleNet', # or "ACPNet" or "JPUNet"
         model = None
     if middle_activation == "Swish":
         model = convert_model_ReLU2Swish(model)
+    elif middle_activation == "Mish":
+        model = convert_model_ReLU2Mish(model)
     return model
 
 def convert_model_ReLU2Swish(module):
@@ -61,4 +63,18 @@ def convert_model_ReLU2Swish(module):
         mod = Swish()
     for name, child in module.named_children():
         mod.add_module(name, convert_model_ReLU2Swish(child))
+    return mod
+
+def convert_model_ReLU2Mish(module):
+    if isinstance(module, torch.nn.DataParallel):
+        mod = module.module
+        mod = convert_model_ReLU2Mish(mod)
+        mod = DataParallelWithCallback(mod)
+        return mod
+    
+    mod = module
+    if isinstance(module, torch.nn.ReLU):
+        mod = Mish()
+    for name, child in module.named_children():
+        mod.add_module(name, convert_model_ReLU2Mish(child))
     return mod
