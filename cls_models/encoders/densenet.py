@@ -1,8 +1,10 @@
 import re
+import torch
 import torch.nn as nn
 
 from pretrainedmodels.models.torchvision_models import pretrained_settings
 from torchvision.models.densenet import DenseNet
+from ..commons import Swish, Mish
 
 
 class DenseNetEncoder(DenseNet):
@@ -17,7 +19,7 @@ class DenseNetEncoder(DenseNet):
     def _transition(x, transition_block):
         for module in transition_block:
             x = module(x)
-            if isinstance(module, nn.ReLU):
+            if isinstance(module, nn.ReLU) or isinstance(module, Mish) or isinstance(module, Swish):
                 skip = x
         return x, skip
 
