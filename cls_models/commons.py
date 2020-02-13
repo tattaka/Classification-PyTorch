@@ -2,6 +2,8 @@ import numpy as np
 import torch
 from torch import nn
 import torch.nn.functional as F
+from torch.nn.parameter import Parameter
+
 
 class Swish(nn.Module):
     def forward(self, x):
@@ -30,6 +32,20 @@ class Flatten(nn.Module):
     """
     def forward(self, x):
         return x.view(x.size()[0], -1)
+
+def gem(x, p=3, eps=1e-6):
+    return F.avg_pool2d(x.clamp(min=eps).pow(p), (x.size(-2), x.size(-1))).pow(1./p)
+
+class GeM(nn.Module):
+    def __init__(self, p=3, eps=1e-6):
+        super(GeM,self).__init__()
+        self.p = Parameter(torch.ones(1)*p)
+        self.eps = eps
+    def forward(self, x):
+        return gem(x, p=self.p, eps=self.eps)       
+    def __repr__(self):
+        return self.__class__.__name__ + '(' + 'p=' + '{:.4f}'.format(self.p.data.tolist()[0]) + ', ' + 'eps=' + str(self.eps) + ')'
+    
     
 class Conv2dReLU(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, padding=0,
